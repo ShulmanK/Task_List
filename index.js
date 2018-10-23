@@ -15,11 +15,36 @@ const taskCollection = document.querySelector('.collection');
 loadEventListeners();
 
 function loadEventListeners () {
+    //DOM load event
+    document.addEventListener('DOMContentLoaded', getTask);
     form.addEventListener('submit', addTask);
     taskCollection.addEventListener('click', removeTask);
     clearTaskBtn.addEventListener('click', clearTasks);
     filterInput.addEventListener('keyup', filterTask);
 
+}
+
+function getTask(){
+    let tasks;
+    if(localStorage.getItem('tasks') === null){
+        tasks = [];
+    } else {
+        tasks = JSON.parse(localStorage.getItem('tasks'));
+    }
+    tasks.forEach(function(task){
+        const li = document.createElement('li');
+        li.className = 'collection-item';
+
+        li.appendChild(document.createTextNode(task));
+
+        taskCollection.appendChild(li);
+
+        const link = document.createElement('a');
+        link.className = 'delete-item secondary-content';
+        link.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+        // link.innerHTML = '<i class="material-icons"></i>';
+        li.appendChild(link);
+    })
 }
 
 //Need to create the function for add tasks
@@ -42,6 +67,11 @@ function addTask (e) {
    // link.innerHTML = '<i class="material-icons"></i>';
    li.appendChild(link);
 
+   //Store in LS
+   storeTaskInLocalStorage(newTaskInput.value);
+
+
+
    //Clear newTaskInput
     newTaskInput.value = '';
 
@@ -50,14 +80,47 @@ function addTask (e) {
     }
 }
 
+//Store task
+
+function storeTaskInLocalStorage(task) {
+    let tasks;
+    if(localStorage.getItem('tasks') === null){
+        tasks = [];
+    } else {
+        tasks = JSON.parse(localStorage.getItem('tasks'));
+    }
+    tasks.push(task);
+    localStorage.setItem('tasks', JSON.stringify(tasks))
+
+}
 //Create function removeTask
 
 function removeTask (e) {
     if (e.target.parentElement.classList.contains('delete-item')) {
         if (confirm('Are you sure?')) {
         e.target.parentElement.parentElement.remove();
+        //Remove task from local storage
+        removeTaskFromLocalStorage(e.target.parentElement.parentElement);
+
         }
     }
+}
+
+//Remove from LS
+function removeTaskFromLocalStorage(taskItem){
+    let tasks;
+    if(localStorage.getItem('tasks') === null){
+        tasks = [];
+    } else {
+        tasks = JSON.parse(localStorage.getItem('tasks'));
+    }
+    tasks.forEach(function(task, index){
+        if(taskItem.textContent === task){
+            tasks.splice(index, 1);
+        }
+    });
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+
 }
 
 //Clear tasks
@@ -72,8 +135,16 @@ function clearTasks (e) {
 while(taskCollection.firstChild) {
     taskCollection.removeChild(taskCollection.lastChild);
 }
+
+//Clear from LS
+    clearTasksFromLocalStorage();
 }
 
+
+function clearTasksFromLocalStorage(){
+    localStorage.clear();
+    
+}
 // Filter task
 
 function filterTask (e) {
